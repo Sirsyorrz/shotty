@@ -31,18 +31,32 @@ echo "  ✓ Symlinked → ~/.local/bin/shotty"
 # ── .desktop file ─────────────────────────────────────────────────────────────
 DESKTOP_DIR="$HOME/.local/share/applications"
 mkdir -p "$DESKTOP_DIR"
+# NOTE: Exec must start with the real python binary — KWin authorizes the
+# ScreenShot2 fast path by matching /proc/pid/exe against desktop Exec lines.
 cat > "$DESKTOP_DIR/shotty.desktop" <<EOF
 [Desktop Entry]
 Name=shotty
 Comment=Region screenshot with annotation
-Exec=$HOME/.local/bin/shotty
+Exec=/usr/bin/python3 $SCRIPT_DIR/shotty.py
 Icon=accessories-screenshot
 Type=Application
 Categories=Graphics;
 Keywords=screenshot;region;capture;
-NoDisplay=true
+X-KDE-DBUS-Restricted-Interfaces=org.kde.KWin.ScreenShot2
 EOF
 echo "  ✓ Desktop entry written"
+
+# ── autostart daemon (instant hotkey response) ────────────────────────────
+mkdir -p "$HOME/.config/autostart"
+cat > "$HOME/.config/autostart/shotty.desktop" <<EOF
+[Desktop Entry]
+Name=shotty daemon
+Exec=/usr/bin/python3 $SCRIPT_DIR/shotty.py --daemon
+Type=Application
+X-KDE-DBUS-Restricted-Interfaces=org.kde.KWin.ScreenShot2
+EOF
+kbuildsycoca6 2>/dev/null || true
+echo "  ✓ Autostart daemon entry written"
 
 # ── screenshots dir ───────────────────────────────────────────────────────────
 mkdir -p "$HOME/Pictures/Screenshots"

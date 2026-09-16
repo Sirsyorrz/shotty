@@ -14,5 +14,6 @@ export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-0}"
 export GDK_BACKEND=wayland
 
+echo "cgroup: $(cat /proc/self/cgroup)"
 echo "--- running ---"
 exec /usr/bin/python3 /home/sirs/Documents/GitHub/shotty/shotty.py
