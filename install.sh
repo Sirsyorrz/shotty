@@ -28,6 +28,11 @@ ln -sf "$SCRIPT_DIR/shotty.py" "$HOME/.local/bin/shotty"
 chmod +x "$SCRIPT_DIR/shotty.py"
 echo "  ✓ Symlinked → ~/.local/bin/shotty"
 
+ICON_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
+mkdir -p "$ICON_DIR"
+cp "$SCRIPT_DIR/shotty.svg" "$ICON_DIR/shotty.svg"
+echo "  ✓ Icon installed"
+
 # ── .desktop file ─────────────────────────────────────────────────────────────
 DESKTOP_DIR="$HOME/.local/share/applications"
 mkdir -p "$DESKTOP_DIR"
@@ -38,7 +43,8 @@ cat > "$DESKTOP_DIR/shotty.desktop" <<EOF
 Name=shotty
 Comment=Region screenshot with annotation
 Exec=/usr/bin/python3 $SCRIPT_DIR/shotty.py
-Icon=accessories-screenshot
+Icon=shotty
+StartupWMClass=shotty
 Type=Application
 Categories=Graphics;
 Keywords=screenshot;region;capture;
@@ -51,6 +57,7 @@ mkdir -p "$HOME/.config/autostart"
 cat > "$HOME/.config/autostart/shotty.desktop" <<EOF
 [Desktop Entry]
 Name=shotty daemon
+Icon=shotty
 Exec=/usr/bin/python3 $SCRIPT_DIR/shotty.py --daemon
 Type=Application
 X-KDE-DBUS-Restricted-Interfaces=org.kde.KWin.ScreenShot2

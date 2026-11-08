@@ -759,6 +759,8 @@ class Daemon:
 
 
 def main():
+    GLib.set_prgname("shotty")
+    Gtk.Window.set_default_icon_name("shotty")
     daemon = Daemon()
     if "--daemon" not in sys.argv:
         # launched by hotkey with no daemon running: take the shot now,
