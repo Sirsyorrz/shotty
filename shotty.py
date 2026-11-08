@@ -50,7 +50,7 @@ gi.require_version("Gdk", "3.0")
 from gi.repository import Gtk, Gdk, GLib
 
 import cairo
-import subprocess, datetime, math
+import subprocess, datetime, math, gc, ctypes
 from urllib.parse import urlparse
 from PIL import Image, ImageDraw
 
@@ -669,7 +669,11 @@ class App:
     def quit(self, msg=None):
         if msg:
             print(msg)
+        # active -> Overlay -> app is a cycle that the idle daemon's GC rarely
+        # reaches; break it and drop the big buffers so nothing waits on gc
+        self.active = None
         for w in self.windows:
+            w.img = w.bg = w._bg_scaled = None
             w.destroy()
         self.windows = []
         if self.on_done:
@@ -756,6 +760,12 @@ class Daemon:
 
     def _done(self):
         self.session = None
+        gc.collect()
+        # glibc keeps freed capture buffers in the brk heap otherwise
+        try:
+            ctypes.CDLL("libc.so.6").malloc_trim(0)
+        except OSError:
+            pass
 
 
 def main():
