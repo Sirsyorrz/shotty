@@ -73,8 +73,16 @@ ST_DRAW   = 1
 
 # ─── capture ──────────────────────────────────────────────────────────────────
 
+# QImage::Format enum -> PIL raw mode (little-endian byte order).
+# Premultiplied variants are treated as straight: desktop captures are opaque.
+QIMAGE_RAW_MODES = {
+    4: "BGRX", 5: "BGRA", 6: "BGRA",
+    16: "RGBX", 17: "RGBA", 18: "RGBA",
+}
+
+
 def kwin_screenshot() -> Image.Image | None:
-    """KWin ScreenShot2: raw BGRA over a pipe. Needs the launching .desktop
+    """KWin ScreenShot2: raw pixels over a pipe. Needs the launching .desktop
     file to contain X-KDE-DBUS-Restricted-Interfaces=org.kde.KWin.ScreenShot2."""
     try:
         bus   = dbus.SessionBus()
@@ -88,6 +96,11 @@ def kwin_screenshot() -> Image.Image | None:
                 dbus.types.UnixFd(w))
         finally:
             os.close(w)
+        fmt = int(res.get("format", 6))
+        raw_mode = QIMAGE_RAW_MODES.get(fmt)
+        if raw_mode is None:
+            os.close(r)
+            raise ValueError(f"unsupported QImage format {fmt}")
         width, height = int(res["width"]), int(res["height"])
         stride = int(res.get("stride", width * 4))
         buf = bytearray()
@@ -100,7 +113,7 @@ def kwin_screenshot() -> Image.Image | None:
         if len(buf) < stride * height:
             return None
         return Image.frombuffer("RGBA", (width, height), bytes(buf),
-                                "raw", "BGRA", stride, 1).copy()
+                                "raw", raw_mode, stride, 1).convert("RGBA")
     except Exception as e:
         print(f"KWin fast path unavailable ({e}); using portal.", file=sys.stderr)
         return None
